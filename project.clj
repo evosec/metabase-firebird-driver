@@ -2,7 +2,7 @@
   :min-lein-version "2.5.0"
 
   :dependencies
-  [[org.firebirdsql.jdbc/jaybird-jdk18 "3.0.5"]]
+  [[org.firebirdsql.jdbc/jaybird-jdk18 "3.0.6"]]
 
   :profiles
   {:provided
