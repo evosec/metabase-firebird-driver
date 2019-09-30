@@ -6,9 +6,7 @@
 
   :profiles
   {:provided
-   {:dependencies
-    [[org.clojure/clojure "1.10.0"]
-     [metabase-core "1.0.0-SNAPSHOT"]]}
+   {:dependencies [[metabase-core "1.0.0-SNAPSHOT"]]}
 
    :uberjar
    {:auto-cleam     true
