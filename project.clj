@@ -1,4 +1,4 @@
-(defproject evosec/firebird-driver "1.0.0"
+(defproject evosec/firebird-driver "1.1.0"
   :min-lein-version "2.5.0"
 
   :dependencies
