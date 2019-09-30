@@ -163,10 +163,13 @@
 (defmethod sql.qp/date [:firebird :quarter-of-year] [_ _ expr] (hx/+ (hx// (hx/- (hsql/call :extract :MONTH expr) 1) 3) 1))
 (defmethod sql.qp/date [:firebird :year]            [_ _ expr] (hsql/call :extract :YEAR expr))
 
-(defmethod driver/date-interval :firebird [driver unit amount]
+(defmethod driver/date-add :firebird [_ dt unit amount]
   (if (= unit :quarter)
-    (recur driver :month (hx/* amount 3))
+    (recur _ dt :month (hx/* amount 3))
     (hsql/call :dateadd (hsql/raw (name unit)) amount (hx/cast :timestamp (hx/literal :now)))))
+
+(defn- date-add [unit & exprs]
+  (apply hsql/call :dateadd (hsql/raw (name unit)) exprs))
 
 (defmethod sql.qp/current-datetime-fn :firebird [_]
   (hx/cast :timestamp (hx/literal :now)))
