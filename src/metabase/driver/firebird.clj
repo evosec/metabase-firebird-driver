@@ -4,6 +4,7 @@
              [string :as str]]
             [clojure.java.jdbc :as jdbc]
             [honeysql.core :as hsql]
+            [java-time :as t]
             [metabase.driver :as driver]
             [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
@@ -14,7 +15,8 @@
             [metabase.util
              [honeysql-extensions :as hx]
              [ssh :as ssh]])
-  (:import [java.sql DatabaseMetaData Time]))
+  (:import [java.sql DatabaseMetaData Time]
+           [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
 
 (driver/register! :firebird, :parent :sql-jdbc)
 
@@ -183,6 +185,41 @@
 (defmethod sql.qp/->honeysql [:firebird :stddev]
   [driver [_ field]]
   (hsql/call :stddev_samp (sql.qp/->honeysql driver field)))
+
+;; MEGA HACK based on sqlite driver
+
+(defn- zero-time? [t]
+  (= (t/local-time t) (t/local-time 0)))
+
+(defmethod sql.qp/->honeysql [:firebird LocalDate]
+  [_ t]
+  (hx/cast :DATE (t/format "yyyy-MM-dd" t)))
+
+(defmethod sql.qp/->honeysql [:firebird LocalDateTime]
+  [driver t]
+  (if (zero-time? t)
+    (sql.qp/->honeysql driver (t/local-date t))
+    (hx/cast :TIMESTAMP (t/format "yyyy-MM-dd HH:mm:ss.SSSS" t))))
+
+(defmethod sql.qp/->honeysql [:firebird LocalTime]
+  [_ t]
+  (hx/cast :TIME (t/format "HH:mm:ss.SSSS" t)))
+
+(defmethod sql.qp/->honeysql [:firebird OffsetDateTime]
+  [driver t]
+  (if (zero-time? t)
+    (sql.qp/->honeysql driver (t/local-date t))
+    (hx/cast :TIMESTAMP (t/format "yyyy-MM-dd HH:mm:ss.SSSS" t))))
+
+(defmethod sql.qp/->honeysql [:firebird OffsetTime]
+  [_ t]
+  (hx/cast :TIME (t/format "HH:mm:ss.SSSS" t)))
+
+(defmethod sql.qp/->honeysql [:firebird ZonedDateTime]
+  [driver t]
+  (if (zero-time? t)
+    (sql.qp/->honeysql driver (t/local-date t))
+    (hx/cast :TIMESTAMP (t/format "yyyy-MM-dd HH:mm:ss.SSSS" t))))
 
 (defmethod driver/supports? [:firebird :basic-aggregations]  [_ _] true)
 
