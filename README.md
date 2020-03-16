@@ -31,5 +31,5 @@ lein install-for-building-drivers
 ```
 cd /path/to/firebird-driver
 lein clean
-DEBUG=1 lein uberjar
+LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
 ```
