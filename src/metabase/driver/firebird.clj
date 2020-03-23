@@ -233,7 +233,7 @@
 
 (defmethod driver/supports? [:firebird :set-timezone]  [_ _] false)
 
-(defmethod driver/supports? [:firebird :nested-queries]  [_ _] false)
+(defmethod driver/supports? [:firebird :nested-queries]  [_ _] true)
 
 (defmethod driver/supports? [:firebird :binning]  [_ _] false)
 
