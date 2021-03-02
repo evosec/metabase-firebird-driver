@@ -170,7 +170,7 @@
     (recur driver dt (hx/* amount 3) :month)
     (hsql/call :dateadd (hsql/raw (name unit)) amount dt)))
 
-(defmethod sql.qp/current-datetime-fn :firebird [_]
+(defmethod sql.qp/current-datetime-honeysql-form :firebird [_]
   (hx/cast :timestamp (hx/literal :now)))
 
 (defmethod driver.common/current-db-time-date-formatters :firebird [_]
