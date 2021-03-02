@@ -80,19 +80,8 @@
                                            items
                                            (* items (dec page)))]))
 
-;; Firebird stores table names as CHAR(31), so names with < 31 characters get padded with spaces.
-;; This confuses everyone, including metabase, so we trim the table names here
-(defn post-filtered-trimmed-active-tables
-  "Alternative implementation of `ISQLDriver/active-tables` best suited for DBs with little or no support for schemas.
-   Fetch *all* Tables, then filter out ones whose schema is in `excluded-schemas` Clojure-side."
-  [driver, ^DatabaseMetaData metadata, & [db-name-or-nil]]
-  (set (for [table (sql-jdbc.sync/post-filtered-active-tables driver metadata db-name-or-nil)]
-         {:name         (str/trim (:name  table))
-          :description  (:description     table)
-          :schema       (:schema          table)})))
-
 (defmethod sql-jdbc.sync/active-tables :firebird [& args]
-  (apply post-filtered-trimmed-active-tables args))
+  (apply sql-jdbc.sync/post-filtered-active-tables args))
 
 ;; Convert unix time to a timestamp
 (defmethod sql.qp/unix-timestamp->honeysql [:firebird :seconds] [_ _ expr]
