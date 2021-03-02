@@ -96,7 +96,7 @@
   (apply post-filtered-trimmed-active-tables args))
 
 ;; Convert unix time to a timestamp
-(defmethod sql.qp/unix-timestamp->timestamp [:firebird :seconds] [_ _ expr]
+(defmethod sql.qp/unix-timestamp->honeysql [:firebird :seconds] [_ _ expr]
   (hsql/call :DATEADD (hsql/raw "SECOND") expr (hx/cast :TIMESTAMP (hx/literal "01-01-1970 00:00:00"))))
 
 ;; Helpers for Date extraction
