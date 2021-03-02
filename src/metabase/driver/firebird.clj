@@ -41,7 +41,6 @@
       firebird->spec
       (sql-jdbc.common/handle-additional-options details)))
 
-;; Use "SELECT 1 FROM RDB$DATABASE" instead of "SELECT 1"
 (defmethod driver/can-connect? :firebird [driver details]
   (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel details))]
     (= 1 (first (vals (first (jdbc/query connection ["SELECT 1 FROM RDB$DATABASE"])))))))
