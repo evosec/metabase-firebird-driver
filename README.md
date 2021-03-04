@@ -20,16 +20,15 @@ For a detailed description, take a look at the [official documentation](https://
 * Download the Metabase sources (>=0.32)
 * Compile a local Metabase installation for building drivers
 ```
-cd /path/to/metabase/source
 lein install-for-building-drivers
 ```
 
 #### Build the driver
 
-* Download the Firebird driver sources
+* Checkout the Firebird driver sources to `{metabase-source-dir}/modules/drivers/firebird`
 * Build the driver. This will create the .jar file in the directory `target/uberjar`. Just copy that file to your plugins directory and you are good to go!
 ```
-cd /path/to/firebird-driver
+cd {metabase-source-dir}/modules/drivers/firebird
 lein clean
 LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
 ```
