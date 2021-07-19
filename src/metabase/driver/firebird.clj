@@ -153,6 +153,9 @@
 (defmethod sql.qp/date [:firebird :quarter-of-year] [_ _ expr] (hx/+ (hx// (hx/- (hsql/call :extract :MONTH expr) 1) 3) 1))
 (defmethod sql.qp/date [:firebird :year]            [_ _ expr] (hsql/call :extract :YEAR expr))
 
+;; Firebird 2.x doesn't support TRUE/FALSE, replacing them with 1 and 0
+(defmethod sql.qp/->honeysql [:firebird Boolean]    [_ bool] (if bool 1 0))
+
 (defmethod sql.qp/add-interval-honeysql-form :firebird [driver hsql-form amount unit]
   (if (= unit :quarter)
     (recur driver hsql-form (hx/* amount 3) :month)
