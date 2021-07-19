@@ -4,6 +4,7 @@
              [string :as str]]
             [clojure.java.jdbc :as jdbc]
             [honeysql.core :as hsql]
+            [honeysql.format :as hformat]
             [java-time :as t]
             [metabase.driver :as driver]
             [metabase.driver.common :as driver.common]
@@ -155,6 +156,20 @@
 
 ;; Firebird 2.x doesn't support TRUE/FALSE, replacing them with 1 and 0
 (defmethod sql.qp/->honeysql [:firebird Boolean]    [_ bool] (if bool 1 0))
+
+;; Firebird 2.x doesn't support SUBSTRING arugments seperated by commas, but uses FROM and FOR keywords
+(defmethod sql.qp/->honeysql [:firebird :substring]
+  [driver [_ arg start length]]
+  (let [col-name (hformat/to-sql (sql.qp/->honeysql driver arg))]
+  (if length
+    (reify
+      hformat/ToSql
+      (to-sql [_]
+        (str "substring(" col-name " FROM " start " FOR " length ")")))
+    (reify
+      hformat/ToSql
+      (to-sql [_]
+        (str "substring(" col-name " FROM " start ")"))))))
 
 (defmethod sql.qp/add-interval-honeysql-form :firebird [driver hsql-form amount unit]
   (if (= unit :quarter)
