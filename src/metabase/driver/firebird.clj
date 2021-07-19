@@ -13,8 +13,8 @@
              [sync :as sql-jdbc.sync]]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.util
-             [honeysql-extensions :as hx]
-             [ssh :as ssh]])
+             [honeysql-extensions :as hx]]
+            [metabase.util.ssh :as ssh])
   (:import [java.sql DatabaseMetaData Time]
            [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
 
@@ -42,7 +42,7 @@
       (sql-jdbc.common/handle-additional-options details)))
 
 (defmethod driver/can-connect? :firebird [driver details]
-  (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel details))]
+  (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel! details))]
     (= 1 (first (vals (first (jdbc/query connection ["SELECT 1 FROM RDB$DATABASE"])))))))
 
 ;; Use pattern matching because some parameters can have a length parameter, e.g. VARCHAR(255)
