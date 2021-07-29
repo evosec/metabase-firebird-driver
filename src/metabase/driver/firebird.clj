@@ -4,19 +4,24 @@
              [string :as str]]
             [clojure.java.jdbc :as jdbc]
             [honeysql.core :as hsql]
+            [honeysql.format :as hformat]
             [java-time :as t]
             [metabase.driver :as driver]
             [metabase.driver.common :as driver.common]
+            ;; [metabase.driver.sql-jdbc.sync.describe-database :as sql-jdbc.sync.describe-database]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
              [sync :as sql-jdbc.sync]]
+            [metabase.driver.sql-jdbc.sync.common :as sql-jdbc.sync.common]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.util
-             [honeysql-extensions :as hx]
-             [ssh :as ssh]])
+             [honeysql-extensions :as hx]]
+            [metabase.util.ssh :as ssh])
   (:import [java.sql DatabaseMetaData Time]
-           [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]))
+           [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
+           [java.sql Connection DatabaseMetaData ResultSet]))
+
 
 (driver/register! :firebird, :parent :sql-jdbc)
 
@@ -42,7 +47,7 @@
       (sql-jdbc.common/handle-additional-options details)))
 
 (defmethod driver/can-connect? :firebird [driver details]
-  (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel details))]
+  (let [connection (sql-jdbc.conn/connection-details->spec driver (ssh/include-ssh-tunnel! details))]
     (= 1 (first (vals (first (jdbc/query connection ["SELECT 1 FROM RDB$DATABASE"])))))))
 
 ;; Use pattern matching because some parameters can have a length parameter, e.g. VARCHAR(255)
@@ -79,6 +84,37 @@
   (assoc honeysql-form :modifiers [(format "FIRST %d SKIP %d"
                                            items
                                            (* items (dec page)))]))
+
+
+;; When selecting constants Firebird doesn't check privileges, we have to select all fields
+(defn simple-select-probe-query
+  [driver schema table]
+  {:pre [(string? table)]}
+  (let [honeysql {:select [:*]
+                  :from   [(sql.qp/->honeysql driver (hx/identifier :table schema table))]
+                  :where  [:not= 1 1]}
+        honeysql (sql.qp/apply-top-level-clause driver :limit honeysql {:limit 0})]
+    (sql.qp/format-honeysql driver honeysql)))
+
+(defn- execute-select-probe-query
+  [driver ^Connection conn [sql & params]]
+  {:pre [(string? sql)]}
+  (with-open [stmt (sql-jdbc.sync.common/prepare-statement driver conn sql params)]
+    ;; attempting to execute the SQL statement will throw an Exception if we don't have permissions; otherwise it will
+    ;; truthy wheter or not it returns a ResultSet, but we can ignore that since we have enough info to proceed at
+    ;; this point.
+    (.execute stmt)))
+
+(defmethod sql-jdbc.sync/have-select-privilege? :sql-jdbc
+  [driver conn table-schema table-name]
+  ;; Query completes = we have SELECT privileges
+  ;; Query throws some sort of no permissions exception = no SELECT privileges
+  (let [sql-args (simple-select-probe-query driver table-schema table-name)]
+    (try
+      (execute-select-probe-query driver conn sql-args)
+      true
+      (catch Throwable _
+        false))))
 
 (defmethod sql-jdbc.sync/active-tables :firebird [& args]
   (apply sql-jdbc.sync/post-filtered-active-tables args))
@@ -152,6 +188,23 @@
 (defmethod sql.qp/date [:firebird :quarter]         [_ _ expr] (hsql/call :dateadd (hsql/raw "MONTH") (hx/* (hx// (hx/- (hsql/call :extract :MONTH expr) 1) 3) 3) (date-trunc expr "YYYY-01-01" 5)))
 (defmethod sql.qp/date [:firebird :quarter-of-year] [_ _ expr] (hx/+ (hx// (hx/- (hsql/call :extract :MONTH expr) 1) 3) 1))
 (defmethod sql.qp/date [:firebird :year]            [_ _ expr] (hsql/call :extract :YEAR expr))
+
+;; Firebird 2.x doesn't support TRUE/FALSE, replacing them with 1 and 0
+(defmethod sql.qp/->honeysql [:firebird Boolean]    [_ bool] (if bool 1 0))
+
+;; Firebird 2.x doesn't support SUBSTRING arugments seperated by commas, but uses FROM and FOR keywords
+(defmethod sql.qp/->honeysql [:firebird :substring]
+  [driver [_ arg start length]]
+  (let [col-name (hformat/to-sql (sql.qp/->honeysql driver arg))]
+    (if length
+      (reify
+        hformat/ToSql
+        (to-sql [_]
+          (str "substring(" col-name " FROM " start " FOR " length ")")))
+      (reify
+        hformat/ToSql
+        (to-sql [_]
+          (str "substring(" col-name " FROM " start ")"))))))
 
 (defmethod sql.qp/add-interval-honeysql-form :firebird [driver hsql-form amount unit]
   (if (= unit :quarter)
