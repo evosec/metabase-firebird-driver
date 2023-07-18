@@ -3,7 +3,7 @@
 
 
  :deps
- {org.firebirdsql.jdbc/jaybird {:mvn/version "4.0.2.java8"}}
+ {org.firebirdsql.jdbc/jaybird {:mvn/version "4.0.9.java8"}}
 
  ;; build the driver with clojure -X:build
  :aliases
