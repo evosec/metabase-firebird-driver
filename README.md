@@ -24,22 +24,17 @@ If that does not work for you, you can use the release artifact `firebird.metaba
 
 ## Building from source:
 
-For a detailed description, take a look at the [official documentation](https://github.com/metabase/metabase/wiki/Writing-A-Driver).
+For a detailed description, take a look at the [official documentation](https://www.metabase.com/docs/latest/developers-guide/drivers/start.html).
 
-#### Prepare a local Metabase installation for building drivers
-
-* Download the Metabase sources
-* Compile a local Metabase installation for building drivers
+* Checkout the main metabase repository and the firebird driver repository in the same parent directory:
 ```
-lein install-for-building-drivers
+workspace
+  - metabase
+  - metabase-firebird-driver
 ```
-
-#### Build the driver
-
-* Checkout the Firebird driver sources to `{metabase-source-dir}/modules/drivers/firebird`
-* Build the driver. This will create the .jar file in the directory `target/uberjar`. Just copy that file to your plugins directory and you are good to go!
+* Run the `build.sh` script from the metabase-firebird-driver repository
 ```
-cd {metabase-source-dir}/modules/drivers/firebird
-lein clean
-LEIN_SNAPSHOTS_IN_RELEASE=true DEBUG=1 lein uberjar
+cd metabase-firebird-driver
+./build.sh
 ```
+* The driver will now be built. The .jar file can be found in the `target` directory.
