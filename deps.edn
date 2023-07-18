@@ -1,0 +1,16 @@
+{:paths
+ ["src" "resources"]
+
+
+ :deps
+ {org.firebirdsql.jdbc/jaybird {:mvn/version "4.0.9.java8"}}
+
+ ;; build the driver with clojure -X:build
+ :aliases
+ {:build
+  {:extra-deps {metabase/metabase-core {:local/root "../metabase"}
+                metabase/build-drivers {:local/root "../metabase/bin/build-drivers"}}
+   :exec-fn    build-drivers.build-driver/build-driver!
+   :exec-args  {:driver      :firebird
+                :project-dir "."
+                :target-dir  "./target"}}}}
