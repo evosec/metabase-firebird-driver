@@ -105,7 +105,7 @@
     ;; this point.
     (.execute stmt)))
 
-(defmethod sql-jdbc.sync/have-select-privilege? :sql-jdbc
+(defmethod sql-jdbc.sync/have-select-privilege? :firebird
   [driver conn table-schema table-name]
   ;; Query completes = we have SELECT privileges
   ;; Query throws some sort of no permissions exception = no SELECT privileges
