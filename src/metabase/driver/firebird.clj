@@ -3,8 +3,8 @@
              [set :as set]
              [string :as str]]
             [clojure.java.jdbc :as jdbc]
-            [honeysql.core :as hsql]
-            [honeysql.format :as hformat]
+            [honey.sql :as hsql]
+            [honey.sql :as hformat]
             [java-time :as t]
             [metabase.driver :as driver]
             [metabase.driver.common :as driver.common]
@@ -15,8 +15,7 @@
              [sync :as sql-jdbc.sync]]
             [metabase.driver.sql-jdbc.sync.common :as sql-jdbc.sync.common]
             [metabase.driver.sql.query-processor :as sql.qp]
-            [metabase.util
-             [honeysql-extensions :as hx]]
+            [metabase.util.honey-sql-2 :as hx]
             [metabase.util.ssh :as ssh])
   (:import [java.sql DatabaseMetaData Time]
            [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
