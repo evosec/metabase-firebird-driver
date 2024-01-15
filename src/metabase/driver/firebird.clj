@@ -34,6 +34,11 @@
           :subname     (str "//" host ":" port "/" db jdbc-flags)}
          (dissoc opts :host :port :db :jdbc-flags)))
 
+;; use Honey SQL 2
+(defmethod sql.qp/honey-sql-version :firebird
+           [_driver]
+           2)
+
 ;; Obtain connection properties for connection to a Firebird database.
 (defmethod sql-jdbc.conn/connection-details->spec :firebird [_ details]
   (-> details
