@@ -283,3 +283,5 @@
 (defmethod driver/database-supports? [:firebird :binning]  [_ _] false)
 
 (defmethod driver/database-supports? [:firebird :case-sensitivity-string-filter-options]  [_ _] false)
+
+(defmethod driver/database-supports? [:firebird :schemas]  [_ _] false)
