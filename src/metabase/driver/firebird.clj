@@ -258,22 +258,16 @@
     (sql.qp/->honeysql driver (t/local-date t))
     (hx/cast :TIMESTAMP (t/format "yyyy-MM-dd HH:mm:ss.SSSS" t))))
 
-(defmethod driver/database-supports? [:firebird :basic-aggregations]  [_ _] true)
-
-(defmethod driver/database-supports? [:firebird :expression-aggregations]  [_ _] true)
-
-(defmethod driver/database-supports? [:firebird :standard-deviation-aggregations]  [_ _] true)
-
-(defmethod driver/database-supports? [:firebird :foreign-keys]  [_ _] true)
-
-(defmethod driver/database-supports? [:firebird :nested-fields]  [_ _] false)
-
-(defmethod driver/database-supports? [:firebird :set-timezone]  [_ _] false)
-
-(defmethod driver/database-supports? [:firebird :nested-queries]  [_ _] true)
-
-(defmethod driver/database-supports? [:firebird :binning]  [_ _] false)
-
-(defmethod driver/database-supports? [:firebird :case-sensitivity-string-filter-options]  [_ _] false)
-
-(defmethod driver/database-supports? [:firebird :schemas]  [_ _] false)
+(doseq [[feature supported?] {; supported
+                              :basic-aggregations                      true
+                              :expression-aggregations                 true
+                              :foreign-keys                            true
+                              :nested-queries                          true
+                              :standard-deviation-aggregations         true
+                              ; not supported
+                              :binning                                 false
+                              :case-sensitivity-string-filter-options  false
+                              :nested-fields                           false
+                              :schemas                                 false
+                              :set-timezone                            false}]
+  (defmethod driver/database-supports? [:firebird feature] [_driver _feature _db] supported?))
