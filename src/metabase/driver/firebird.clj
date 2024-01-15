@@ -20,6 +20,7 @@
            [java.time LocalDate LocalDateTime LocalTime OffsetDateTime OffsetTime ZonedDateTime]
            [java.sql Connection DatabaseMetaData ResultSet]))
 
+(set! *warn-on-reflection* true)
 
 (driver/register! :firebird, :parent :sql-jdbc)
 
