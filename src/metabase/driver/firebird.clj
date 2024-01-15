@@ -266,20 +266,20 @@
     (sql.qp/->honeysql driver (t/local-date t))
     (hx/cast :TIMESTAMP (t/format "yyyy-MM-dd HH:mm:ss.SSSS" t))))
 
-(defmethod driver/supports? [:firebird :basic-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebird :basic-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebird :expression-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebird :expression-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebird :standard-deviation-aggregations]  [_ _] true)
+(defmethod driver/database-supports? [:firebird :standard-deviation-aggregations]  [_ _] true)
 
-(defmethod driver/supports? [:firebird :foreign-keys]  [_ _] true)
+(defmethod driver/database-supports? [:firebird :foreign-keys]  [_ _] true)
 
-(defmethod driver/supports? [:firebird :nested-fields]  [_ _] false)
+(defmethod driver/database-supports? [:firebird :nested-fields]  [_ _] false)
 
-(defmethod driver/supports? [:firebird :set-timezone]  [_ _] false)
+(defmethod driver/database-supports? [:firebird :set-timezone]  [_ _] false)
 
-(defmethod driver/supports? [:firebird :nested-queries]  [_ _] true)
+(defmethod driver/database-supports? [:firebird :nested-queries]  [_ _] true)
 
-(defmethod driver/supports? [:firebird :binning]  [_ _] false)
+(defmethod driver/database-supports? [:firebird :binning]  [_ _] false)
 
-(defmethod driver/supports? [:firebird :case-sensitivity-string-filter-options]  [_ _] false)
+(defmethod driver/database-supports? [:firebird :case-sensitivity-string-filter-options]  [_ _] false)
