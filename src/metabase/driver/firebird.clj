@@ -125,7 +125,7 @@
 
 ;; Convert unix time to a timestamp
 (defmethod sql.qp/unix-timestamp->honeysql [:firebird :seconds] [_ _ expr]
-  (hsql/call :DATEADD (hsql/raw "SECOND") expr (hx/cast :TIMESTAMP (hx/literal "01-01-1970 00:00:00"))))
+  [:DATEADD (hsql/raw "SECOND") expr (hx/cast :TIMESTAMP (hx/literal "01-01-1970 00:00:00"))])
 
 ;; Helpers for Date extraction
 ;; TODO: This can probably simplified a lot by using String concentation instead of
@@ -151,7 +151,7 @@
     5 :YEAR))
 ;; Replace the specified part of the timestamp
 (defn- replace-timestamp-part [input unit expr]
-  (hsql/call :replace input (hx/literal (get-unit-placeholder unit)) (hsql/call :extract unit expr)))
+  [:replace input (hx/literal (get-unit-placeholder unit)) [:extract unit expr]])
 
 (defn- format-step [expr input step wanted-unit]
   (if (> step wanted-unit)
@@ -172,26 +172,26 @@
 (defmethod sql.qp/date [:firebird :default]         [_ _ expr] expr)
 ;; Cast to TIMESTAMP if we need minutes or hours, since expr might be a DATE
 (defmethod sql.qp/date [:firebird :minute]          [_ _ expr] (timestamp-trunc (hx/cast :TIMESTAMP expr) "YYYY-MM-DD hh:mm:00" 1))
-(defmethod sql.qp/date [:firebird :minute-of-hour]  [_ _ expr] (hsql/call :extract :MINUTE (hx/cast :TIMESTAMP expr)))
+(defmethod sql.qp/date [:firebird :minute-of-hour]  [_ _ expr] [:extract :MINUTE (hx/cast :TIMESTAMP expr)])
 (defmethod sql.qp/date [:firebird :hour]            [_ _ expr] (timestamp-trunc (hx/cast :TIMESTAMP expr) "YYYY-MM-DD hh:00:00" 2))
-(defmethod sql.qp/date [:firebird :hour-of-day]     [_ _ expr] (hsql/call :extract :HOUR (hx/cast :TIMESTAMP expr)))
+(defmethod sql.qp/date [:firebird :hour-of-day]     [_ _ expr] [:extract :HOUR (hx/cast :TIMESTAMP expr)])
 ;; Cast to DATE to get rid of anything smaller than day
 (defmethod sql.qp/date [:firebird :day]             [_ _ expr] (hx/cast :DATE expr))
 ;; Firebird DOW is 0 (Sun) - 6 (Sat); increment this to be consistent with Java, H2, MySQL, and Mongo (1-7)
-(defmethod sql.qp/date [:firebird :day-of-week]     [_ _ expr] (hx/+ (hsql/call :extract :WEEKDAY (hx/cast :DATE expr)) 1))
-(defmethod sql.qp/date [:firebird :day-of-month]    [_ _ expr] (hsql/call :extract :DAY expr))
+(defmethod sql.qp/date [:firebird :day-of-week]     [_ _ expr] (hx/+ [:extract :WEEKDAY (hx/cast :DATE expr)] 1))
+(defmethod sql.qp/date [:firebird :day-of-month]    [_ _ expr] [:extract :DAY expr])
 ;; Firebird YEARDAY starts from 0; increment this
-(defmethod sql.qp/date [:firebird :day-of-year]     [_ _ expr] (hx/+ (hsql/call :extract :YEARDAY expr) 1))
+(defmethod sql.qp/date [:firebird :day-of-year]     [_ _ expr] (hx/+ [:extract :YEARDAY expr] 1))
 ;; Cast to DATE because we do not want units smaller than days
 ;; Use hsql/raw for DAY in dateadd because the keyword :WEEK gets surrounded with quotations
-(defmethod sql.qp/date [:firebird :week]            [_ _ expr] (hsql/call :dateadd (hsql/raw "DAY") (hx/- 0 (hsql/call :extract :WEEKDAY (hx/cast :DATE expr))) (hx/cast :DATE expr)))
-(defmethod sql.qp/date [:firebird :week-of-year]    [_ _ expr] (hsql/call :extract :WEEK expr))
+(defmethod sql.qp/date [:firebird :week]            [_ _ expr] [:dateadd (hsql/raw "DAY") (hx/- 0 [:extract :WEEKDAY (hx/cast :DATE expr)]) (hx/cast :DATE expr)])
+(defmethod sql.qp/date [:firebird :week-of-year]    [_ _ expr] [:extract :WEEK expr])
 (defmethod sql.qp/date [:firebird :month]           [_ _ expr] (date-trunc expr "YYYY-MM-01" 4))
-(defmethod sql.qp/date [:firebird :month-of-year]   [_ _ expr] (hsql/call :extract :MONTH expr))
+(defmethod sql.qp/date [:firebird :month-of-year]   [_ _ expr] [:extract :MONTH expr])
 ;; Use hsql/raw for MONTH in dateadd because the keyword :MONTH gets surrounded with quotations
-(defmethod sql.qp/date [:firebird :quarter]         [_ _ expr] (hsql/call :dateadd (hsql/raw "MONTH") (hx/* (hx// (hx/- (hsql/call :extract :MONTH expr) 1) 3) 3) (date-trunc expr "YYYY-01-01" 5)))
-(defmethod sql.qp/date [:firebird :quarter-of-year] [_ _ expr] (hx/+ (hx// (hx/- (hsql/call :extract :MONTH expr) 1) 3) 1))
-(defmethod sql.qp/date [:firebird :year]            [_ _ expr] (hsql/call :extract :YEAR expr))
+(defmethod sql.qp/date [:firebird :quarter]         [_ _ expr] [:dateadd (hsql/raw "MONTH") (hx/* (hx// (hx/- [:extract :MONTH expr] 1) 3) 3) (date-trunc expr "YYYY-01-01" 5)])
+(defmethod sql.qp/date [:firebird :quarter-of-year] [_ _ expr] (hx/+ (hx// (hx/- [:extract :MONTH expr] 1) 3) 1))
+(defmethod sql.qp/date [:firebird :year]            [_ _ expr] [:extract :YEAR expr])
 
 ;; Firebird 2.x doesn't support TRUE/FALSE, replacing them with 1 and 0
 (defmethod sql.qp/->honeysql [:firebird Boolean]    [_ bool] (if bool 1 0))
@@ -213,7 +213,7 @@
 (defmethod sql.qp/add-interval-honeysql-form :firebird [driver hsql-form amount unit]
   (if (= unit :quarter)
     (recur driver hsql-form (hx/* amount 3) :month)
-    (hsql/call :dateadd (hsql/raw (name unit)) amount hsql-form)))
+    [:dateadd (hsql/raw (name unit)) amount hsql-form]))
 
 (defmethod sql.qp/current-datetime-honeysql-form :firebird [_]
   (hx/cast :timestamp (hx/literal :now)))
@@ -229,7 +229,7 @@
 
 (defmethod sql.qp/->honeysql [:firebird :stddev]
   [driver [_ field]]
-  (hsql/call :stddev_samp (sql.qp/->honeysql driver field)))
+  [:stddev_samp (sql.qp/->honeysql driver field)])
 
 ;; MEGA HACK based on sqlite driver
 
