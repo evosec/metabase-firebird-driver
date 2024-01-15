@@ -218,15 +218,6 @@
 (defmethod sql.qp/current-datetime-honeysql-form :firebird [_]
   (hx/cast :timestamp (hx/literal :now)))
 
-(defmethod driver.common/current-db-time-date-formatters :firebird [_]
-  (driver.common/create-db-time-formatters "yyyy-MM-dd HH:mm:ss.SSSS"))
-
-(defmethod driver.common/current-db-time-native-query :firebird [_]
-  "SELECT CAST(CAST('Now' AS TIMESTAMP) AS VARCHAR(24)) FROM RDB$DATABASE")
-
-(defmethod driver/current-db-time :firebird [& args]
-  (apply driver.common/current-db-time args))
-
 (defmethod sql.qp/->honeysql [:firebird :stddev]
   [driver [_ field]]
   [:stddev_samp (sql.qp/->honeysql driver field)])
